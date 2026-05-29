@@ -1,10 +1,11 @@
 <main class="deadline-container">
-
   @if (countdownState$ | async; as state) {
     @if (state.status === 'ready') {
-      <p class="countdown-text">Seconds left to deadline: {{ state.secondsLeft }}</p>
-    } @else if (state.status === 'error') {
-      <p class="status-text">Unable to load deadline countdown.</p>
+      <p role="timer" aria-live="polite" class="countdown-text">
+        Seconds left to deadline: {{ state.secondsLeft }}
+      </p>
+    } @else if (state.status === 'finished') {
+      <p class="countdown-text" aria-live="polite">Deadline reached</p>
     } @else {
       <p class="status-text">Loading countdown...</p>
     }

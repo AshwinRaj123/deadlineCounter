@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
-import { catchError, distinctUntilChanged, map, of, shareReplay, startWith, switchMap, takeWhile, timer } from 'rxjs';
+import { distinctUntilChanged, map, shareReplay, startWith, switchMap, takeWhile, timer } from 'rxjs';
+import { secondsUntil } from './countdown.utils';
 import { DeadlineService } from './deadline.service';
 
 type CountdownState =
   | { status: 'loading' }
   | { status: 'ready'; secondsLeft: number }
-  | { status: 'error' };
+  | { status: 'finished' };
 
 @Component({
   selector: 'app-root',
@@ -24,14 +25,16 @@ export class AppComponent {
       const deadlineEpochMs = Date.now() + initialSecondsLeft * 1_000;
 
       return timer(0, 1_000).pipe(
-        map(() => Math.max(0, Math.ceil((deadlineEpochMs - Date.now()) / 1_000))),
+        map(() => secondsUntil(deadlineEpochMs)),
         distinctUntilChanged(),
         takeWhile((secondsLeft) => secondsLeft > 0, true),
-        map((secondsLeft): CountdownState => ({ status: 'ready', secondsLeft }))
+        map(
+          (secondsLeft): CountdownState =>
+            secondsLeft > 0 ? { status: 'ready', secondsLeft } : { status: 'finished' }
+        )
       );
     }),
     startWith<CountdownState>({ status: 'loading' }),
-    catchError(() => of<CountdownState>({ status: 'error' })),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 }
